@@ -1,0 +1,282 @@
+jQuery(document).ready(function ($) {
+    /* if ($('#docs-single .docs-wrap').length) {
+        $('#docs-single .docs-wrap').width($('#docs-single .docs-wrap').parent().width());
+    } */
+    $('body').on('click', '.docs-menu .top-item.has-child > i', function () {
+        $(this).parent().toggleClass('active');
+        return false;
+    })
+
+    $('#home-block .elementor-widget-image-box').click(function () {
+        var link = $(this).find('a:eq(0)').attr('href');
+
+        window.location.href = link;
+    })
+    var menu_top = $('.docs-menu').length ? $('.docs-menu').offset().top : 0;
+    var cnt_top = $('.single-content').length ? $('.single-content').offset().top : 0;
+
+    /*     $('body:not(.elementor-editor-active)').on('click', 'article *:not(a)', function (event) {
+            event.stopPropagation();
+            var href = $(this).closest('article').find('a').eq(0).attr('href');
+            if (href) {
+                window.location.href = href;
+            }
+        }) */
+
+    if ($('#post-action').length > 0) {
+        $('#post-action a[do]').on('click', function () {
+            var _this = $(this);
+            var vdo = $(this).attr('do');
+            var tt = vdo == 'like' ? '顶一下' : '踩一下';
+            if (_this.closest('#post-action').hasClass('active')) {
+                pxmu.toast({
+                    msg: "仅能表态一次哦",
+                    color: '#fff',
+                    bg: 'rgba(255, 0, 0, 0.86)',
+                    location: 'center',
+                    animation: 'slidedown'
+                });
+                return false;
+            }
+            var data = {
+                action: 'wpcn',
+                post_id: obj_id,
+                do: vdo,
+                _wpnonce: wpcn_nonce
+            }
+
+            $.ajax({
+                url: ajaxurl,
+                data: data,
+                type: 'post',
+                success: function (res) {
+                    if (res.status == 0) {
+                        var num = parseInt(_this.find('span').text());
+                        _this.closest('#post-action').addClass('active')
+                        _this.find('span').text(num + 1);
+                        pxmu.toast({
+                            msg: "表态成功",
+                            color: '#fff',
+                            bg: 'rgba(255, 0, 0, 0.86)',
+                            location: 'center',
+                            animation: 'slidedown'
+                        });
+                        setCookie("do-" + obj_id, 1);
+                    }
+                }
+            })
+
+            return false;
+        })
+    }
+
+    // 目录为空时
+    if ($('.elementor-widget-table-of-contents .elementor-toc__body').length) {
+        var times = 0;
+        var tt = setInterval(function () {
+            if (times > 10) {
+                clearInterval(tt);
+            }
+            var txt = $('.elementor-toc__body').text();
+            txt = $.trim(txt);
+            if (txt.length > 0) {
+                times++;
+                if (txt == 'No headings were found on this page.') {
+                    $('.elementor-widget-table-of-contents').hide();
+                    clearInterval(tt);
+                }
+            }
+        }, 1000);
+    }
+
+
+    if ($('#docs-single .elementor-toc__header-title').length) {
+        $('#docs-single .elementor-toc__header-title').append('<a href="#"></a>');
+    }
+
+    if ($('#docs-single .elementor-toc__header-title a').length) {
+        $('body').on('click', '#docs-single .elementor-toc__header-title a', function () {
+            $(this).closest('.elementor-widget-table-of-contents').toggleClass('active');
+            return false;
+        })
+    }
+
+    /* 搜索结果高亮 */
+    if ($('body.search-results').length) {
+        // 排除的标签
+        var excludedTags = ["img", "link"];
+        // 获取搜索的参数
+        var keyword = decodeURI(getQueryString('s'));
+        if (keyword.length > 0) {
+            $('.elementor-widget-archive-posts')
+                .find(":not(" + excludedTags.join(",") + ")")
+                .contents()
+                .filter(function () {
+                    return this.nodeType === 3; // 文本节点
+                })
+                .each(function () {
+                    var content = $(this).text();
+                    var regex = new RegExp(keyword, "gi");
+                    var replacedContent = content.replace(regex, "<span class='search-highlight'>$&</span>");
+                    $(this).replaceWith(replacedContent);
+                });
+        }
+    }
+
+    // 侧边搜索仅搜救当前分类
+    if ($('#side-search').length) {
+        $('#side-search [name="s"]').after('<input type="hidden" name="cat" value="' + obj_id + '">');
+    }
+
+    // 头部下拉菜单
+    $('body').on('click', '#mega-menu-main_menu .elementor-widget-image-box', function () {
+        var link = $(this).find('a:eq(0)').attr('href');
+        if (link) {
+            window.location.href = link;
+        }
+    })
+
+    $('#footer-menu .menu>li>a').click(function () {
+        return false;
+    })
+
+    $('.elementor-widget-archive-posts a').each(function () {
+        var $a = $(this);
+        var $innerA = $a.find('a');
+        if ($innerA.length > 0) {
+            $a.replaceWith($innerA.html());
+        }
+    });
+
+    // 202311新首页
+    $('#n11_home_guide .elementor-widget-image-box').click(function () {
+        var href = $(this).find('a').attr('href');
+        if (href != undefined) {
+            window.location.href = href;
+        }
+    });
+
+    // 202312头部搜索
+    $('#header-search-box .elementor-search-form__container').click(function () {
+        if (!$(this).hasClass('active')) {
+            $(this).addClass('active');
+            $(this).find('input').focus();
+            return false;
+        }
+    })
+
+    // 202312底部微信
+    $('a[data-do="wx"]').click(function (event) {
+        event.preventDefault();
+        $('#wxbox').slideToggle();
+        return false;
+    })
+
+
+    $(window).scroll(function () {
+        // sticky_ele($('#docs-single .docs-menu'), $('.single-content'));
+        sticky_ele($('#docs-single #right-side .tuijian'), $('.single-content'));
+        sticky_ele($('.cnt-toc'), $('.blog-main'));
+        sticky_ele($('.blog-side-wrap'), $('.blog-main'));
+        sticky_ele($('.baike_side'), $('.blog-main'));
+
+        if ($(window).scrollTop() > 10) {
+            $('div[data-elementor-type="header"]').addClass('sticky-on');
+        } else {
+            $('div[data-elementor-type="header"]').removeClass('sticky-on');
+        }
+    })
+
+    function getQueryString(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+
+    function sticky_ele(ele, cntH) {
+        if (ele.length && cntH.length) {
+            if ($(window).scrollTop() > cntH.offset().top - 120) {
+                var cnt_top = cntH.offset().top;
+                ele.addClass('sticky');
+                if ($(window).scrollTop() > cntH.height() - ele.height() - 65) {
+                    ele.addClass('fixed');
+                } else {
+                    ele.removeClass('fixed');
+                }
+                ele.width(ele.parent().width());
+            } else {
+                ele.removeClass('sticky');
+                ele.removeAttr('style');
+            }
+        }
+    }
+
+    $(".elementor-widget-theme-post-content img").click(function () {
+        if (!$(this).parent().is('a')) {
+            var _this = $(this);//将当前的img元素作为_this传入函数
+            imgShow("#outerdiv", "#innerdiv", "#bigimg", _this);
+        }
+
+    });
+
+    function imgShow(outerdiv, innerdiv, bigimg, _this) {
+        if (!$("#outerdiv").length) {
+            $("body").append('<div id="outerdiv" style="position:fixed;top:0;left:0;background:rgba(0,0,0,0.7);z-index:999;width:100%;height:100%;display:none;"> <div id="innerdiv" style="position:absolute;"><img id="bigimg" src="" /></div> </div>');
+        }
+        var src = _this.attr("src");//获取当前点击的pimg元素中的src属性
+        $(bigimg).attr("src", src);//设置#bigimg元素的src属性
+        /*获取当前点击图片的真实大小，并显示弹出层及大图*/
+        $("<img/>").attr("src", src).load(function () {
+            var windowW = $(window).width();//获取当前窗口宽度
+            var windowH = $(window).height();//获取当前窗口高度
+            var realWidth = this.width;//获取图片真实宽度
+            var realHeight = this.height;//获取图片真实高度
+            var imgWidth, imgHeight;
+            var scale = 0.8;//缩放尺寸，当图片真实宽度和高度大于窗口宽度和高度时进行缩放
+            if (realHeight > windowH * scale) {//判断图片高度
+                imgHeight = windowH * scale;//如大于窗口高度，图片高度进行缩放
+                imgWidth = imgHeight / realHeight * realWidth;//等比例缩放宽度
+                if (imgWidth > windowW * scale) {//如宽度扔大于窗口宽度
+                    imgWidth = windowW * scale;//再对宽度进行缩放
+                }
+            } else if (realWidth > windowW * scale) {//如图片高度合适，判断图片宽度
+                imgWidth = windowW * scale;//如大于窗口宽度，图片宽度进行缩放
+                imgHeight = imgWidth / realWidth * realHeight;//等比例缩放高度
+            } else {//如果图片真实高度和宽度都符合要求，高宽不变
+                imgWidth = realWidth;
+                imgHeight = realHeight;
+            }
+            $(bigimg).css("width", imgWidth);//以最终的宽度对图片缩放
+            var w = (windowW - imgWidth) / 2;//计算图片与窗口左边距
+            var h = (windowH - imgHeight) / 2;//计算图片与窗口上边距
+            $(innerdiv).css({ "top": h, "left": w });//设置#innerdiv的top和left属性
+            $(outerdiv).fadeIn("fast");//淡入显示#outerdiv及.pimg
+        });
+        $('body').on('click', outerdiv, function () {//再次点击淡出消失弹出层
+            $(this).fadeOut("fast");
+        });
+    }
+
+    function setCookie(name, value) {
+        var Days = 10;
+        var exp = new Date();
+        exp.setTime(exp.getTime() + Days * 24 * 60 * 60 * 1000);
+        document.cookie = name + "=" + escape(value) + ";expires=" + exp.toGMTString() + ";path=/;";
+    }
+    function getCookie(name) {
+        var arr, reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
+        if (arr = document.cookie.match(reg))
+            return unescape(arr[2]);
+        else
+            return null;
+    }
+    function delCookie(name) {
+        var exp = new Date();
+        exp.setTime(exp.getTime() - 1);
+        var cval = getCookie(name);
+        if (cval != null)
+            document.cookie = name + "=" + cval + ";expires=" + exp.toGMTString();
+    }
+});

@@ -1,0 +1,9 @@
+.elementor-heading-title:hover a {
+    color: var(--brand_color);
+}
+
+@media (min-width: 1200px) {
+    .elementor-section.elementor-section-boxed>.elementor-container {
+        max-width: 1200px;
+    }
+}
